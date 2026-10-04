@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Safelink to MediaFire Bypasser</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-4">
+
+  <div class="max-w-md w-full bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-2xl space-y-5">
+    <div class="text-center">
+      <h1 class="text-2xl font-bold text-emerald-400">⚡ Link Bypasser</h1>
+      <p class="text-xs text-slate-400 mt-1">Bypass Safelink langsung ke MediaFire / Google Drive</p>
+    </div>
+
+    <div class="space-y-3">
+      <input type="url" id="linkInput" placeholder="Tempel link sfl.gl / safelink di sini..." 
+             class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 focus:outline-none focus:border-emerald-500">
+      
+      <button onclick="bypassLink()" id="btnSubmit" 
+              class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 rounded-xl transition">
+        Bypass Link Sekarang
+      </button>
+    </div>
+
+    <div id="resultBox" class="hidden space-y-3 pt-4 border-t border-slate-800">
+      <label class="text-xs font-semibold text-emerald-400 block">HASIL LINK TUJUAN:</label>
+      <input type="text" id="finalUrl" readonly class="w-full bg-slate-950 p-3 rounded-xl border border-slate-800 font-mono text-xs text-emerald-300">
+      
+      <div class="flex gap-2">
+        <button onclick="copyLink()" class="w-1/2 bg-slate-800 hover:bg-slate-700 py-2.5 rounded-lg text-xs font-medium border border-slate-700">Salin Link</button>
+        <a id="openBtn" href="#" target="_blank" class="w-1/2 bg-emerald-600 hover:bg-emerald-500 text-center py-2.5 rounded-lg text-xs font-medium text-white">Buka Link</a>
+      </div>
+
+      <div class="pt-2">
+        <span class="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Jalur Tracking:</span>
+        <div id="logs" class="bg-slate-950 p-2.5 rounded-lg text-[11px] font-mono text-slate-400 max-h-32 overflow-y-auto border border-slate-800 space-y-1"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function bypassLink() {
+      const input = document.getElementById('linkInput').value.trim();
+      const btn = document.getElementById('btnSubmit');
+      const resultBox = document.getElementById('resultBox');
+      const finalUrl = document.getElementById('finalUrl');
+      const openBtn = document.getElementById('openBtn');
+      const logs = document.getElementById('logs');
+
+      if (!input) return alert('Masukkan link terlebih dahulu!');
+
+      btn.innerText = 'Memproses...';
+      btn.disabled = true;
+      resultBox.classList.add('hidden');
+
+      try {
+        const res = await fetch('/api/unshorten', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: input })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          finalUrl.value = data.finalUrl;
+          openBtn.href = data.finalUrl;
+
+          logs.innerHTML = '';
+          if (data.chain.length === 0) {
+            logs.innerHTML = '<div>• Langsung ke link tujuan.</div>';
+          } else {
+            data.chain.forEach((log, i) => {
+              logs.innerHTML += `<div>${i + 1}. ${log}</div>`;
+            });
+          }
+
+          resultBox.classList.remove('hidden');
+        } else {
+          alert(data.error || 'Gagal memproses link.');
+        }
+      } catch (e) {
+        alert('Terjadi kesalahan koneksi ke server.');
+      } finally {
+        btn.innerText = 'Bypass Link Sekarang';
+        btn.disabled = false;
+      }
+    }
+
+    function copyLink() {
+      const finalUrl = document.getElementById('finalUrl');
+      finalUrl.select();
+      navigator.clipboard.writeText(finalUrl.value);
+      alert('Link berhasil disalin!');
+    }
+  </script>
+</body>
+</html>
